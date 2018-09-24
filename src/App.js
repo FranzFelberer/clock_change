@@ -45,6 +45,8 @@ class App extends Component {
           startDate={this.state.startDate}
           endDate={this.state.endDate}
           wakeUpTime={this.state.wakeUpTime}
+          workStart={this.state.workStart}
+          workEnd={this.state.workEnd}
           bedTime={this.state.bedTime}
           latitude={this.state.latitude}
           longitude={this.state.longitude}

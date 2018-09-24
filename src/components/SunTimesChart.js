@@ -15,7 +15,8 @@ class SunTimesChart extends React.Component {
                 yAxes: [{
                     ticks: {
                         min: 0,
-                        max: 24
+                        max: 24,
+                        stepSize: 2
                     }
                 }]
             }
@@ -34,20 +35,34 @@ class SunTimesChart extends React.Component {
               endDate = new Date(this.props.endDate),
               wakeUpTime = Number.parseInt(this.props.wakeUpTime.split(':')[0])
                          + Number.parseInt(this.props.wakeUpTime.split(':')[1])/ 60,
+              workStart = Number.parseInt(this.props.workStart.split(':')[0])
+                + Number.parseInt(this.props.workStart.split(':')[1]) / 60,
+              workEnd = Number.parseInt(this.props.workEnd.split(':')[0])
+                + Number.parseInt(this.props.workEnd.split(':')[1]) / 60,
               bedTime = Number.parseInt(this.props.bedTime.split(':')[0])
                 + Number.parseInt(this.props.bedTime.split(':')[1]) / 60,
               timeModel = this.props.timeModel;
+        
+        // get the normal time difference between local time and UCT
+        const refWinterTime = new Date('2019-12-21')  // winter start => no DST
+        const winterTimeDiff = refWinterTime.getTimezoneOffset() / 60;
 
-        let dt = new Date(startDate);
-        let sunRiseSeries = [],
+        const refSummerTime = new Date('2019-06-21')  // summer start =>  DST
+        const summerTimeDiff = refSummerTime.getTimezoneOffset() / 60;
+
+
+        let dt = new Date(startDate),
+            sunRiseSeries = [],
             wakeUpSeries = [],
-            sunSetSeries = [],
-            bedTimeSeries = [];
+            workStartSeries = [],
+            workEndSeries = [],
+            bedTimeSeries = [],
+            sunSetSeries = [];
 
         while (dt <= endDate) {
-            let sunRise;
-            let sunSet;
-            let sunTimes = SunCalc.getTimes(dt, latidute, longitude);
+            let sunRise,
+                sunSet,
+                sunTimes = SunCalc.getTimes(dt, latidute, longitude);
 
             switch (timeModel) {
                 case 'clockChange':
@@ -55,18 +70,20 @@ class SunTimesChart extends React.Component {
                     sunSet = sunTimes.sunset.getHours() + sunTimes.sunset.getMinutes() / 60;
                     break;
                 case 'alwaysSummerTime':
-                    sunRise = sunTimes.sunrise.getUTCHours() + 2 + sunTimes.sunrise.getMinutes() / 60;
-                    sunSet = sunTimes.sunset.getUTCHours() + 2 + sunTimes.sunset.getMinutes() / 60;
+                    sunRise = sunTimes.sunrise.getUTCHours() - summerTimeDiff + sunTimes.sunrise.getMinutes() / 60;
+                    sunSet = sunTimes.sunset.getUTCHours() - summerTimeDiff + sunTimes.sunset.getMinutes() / 60;
                     break;
                 case 'alwaysWinterTime':
-                    sunRise = sunTimes.sunrise.getUTCHours() + 1 + sunTimes.sunrise.getMinutes() / 60;
-                    sunSet = sunTimes.sunset.getUTCHours() + 1 + sunTimes.sunset.getMinutes() / 60;
+                    sunRise = sunTimes.sunrise.getUTCHours() - winterTimeDiff + sunTimes.sunrise.getMinutes() / 60;
+                    sunSet = sunTimes.sunset.getUTCHours() - winterTimeDiff + sunTimes.sunset.getMinutes() / 60;
                     break;
             }
 
             sunRiseSeries.push({ t: new Date(dt), y: sunRise});
+            wakeUpSeries.push({ t: new Date(dt), y: wakeUpTime });
+            workStartSeries.push({ t: new Date(dt), y: workStart });
+            workEndSeries.push({ t: new Date(dt), y: workEnd });
             sunSetSeries.push({ t: new Date(dt), y: sunSet });
-            wakeUpSeries.push({ t: new Date(dt), y: wakeUpTime});
             bedTimeSeries.push({ t: new Date(dt), y: bedTime });
 
             dt.setDate(dt.getDate() + 1);
@@ -82,13 +99,21 @@ class SunTimesChart extends React.Component {
                     data: wakeUpSeries,
                     fill: false
                 },
+                {   label: "workStart",
+                    data: workStartSeries,
+                    fill: false
+                },
+                {
+                    label: "workEnd",
+                    data: workEndSeries,
+                    fill: false
+                },
                 {   label: "sunSet",
                     data: sunSetSeries,
                     fill: 'end',
                     borderColor: 'rgba(244, 187, 65, 1)'
                 },
-                {
-                    label: "bedTime",
+                {   label: "bedTime",
                     data: bedTimeSeries,
                     fill: false
                 }
