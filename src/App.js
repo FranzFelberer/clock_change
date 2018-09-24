@@ -7,6 +7,7 @@ import SunTimesChart from './components/SunTimesChart';
 class App extends Component {
   constructor(props) {
     super(props);
+
     this.state = {
       startDate: "2019-01-01",
       endDate: "2019-12-31",
@@ -14,11 +15,23 @@ class App extends Component {
       workStart: "08:30",
       workEnd: "17:30",
       bedTime: "23:00",
-      latitude: 45.75,
-      longitude: 4.85,
+      latitude: 0,
+      longitude: 0,
       timeModel: "clockChange"
     };
     this.changeStateValue = this.changeStateValue.bind(this);
+ }
+ 
+
+  componentDidMount() {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        this.setState({
+          latitude: parseFloat(position.coords.latitude.toFixed(2)),
+          longitude: parseFloat(position.coords.longitude.toFixed(2))
+        })
+      }
+    )
   }
 
   changeStateValue(name, newValue) {

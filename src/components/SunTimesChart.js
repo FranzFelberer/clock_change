@@ -50,7 +50,6 @@ class SunTimesChart extends React.Component {
         const refSummerTime = new Date('2019-06-21')  // summer start =>  DST
         const summerTimeDiff = refSummerTime.getTimezoneOffset() / 60;
 
-
         let dt = new Date(startDate),
             sunRiseSeries = [],
             wakeUpSeries = [],
