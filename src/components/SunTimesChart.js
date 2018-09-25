@@ -56,15 +56,21 @@ class SunTimesChart extends React.Component {
             workStartSeries = [],
             workEndSeries = [],
             bedTimeSeries = [],
-            sunSetSeries = [];
+            sunSetSeries = [],
+            duskSeries = [],
+            dawnSeries = [];
 
         while (dt <= endDate) {
-            let sunRise,
+            let dawn,
+                sunRise,
                 sunSet,
+                dusk,
                 sunTimes = SunCalc.getTimes(dt, latidute, longitude);
 
             switch (timeModel) {
                 case 'clockChange':
+                    dawn = sunTimes.dawn.getHours() + sunTimes.dawn.getMinutes() / 60;
+                    dusk = sunTimes.dusk.getHours() + sunTimes.dusk.getMinutes() / 60;
                     sunRise = sunTimes.sunrise.getHours() + sunTimes.sunrise.getMinutes() / 60;
                     sunSet = sunTimes.sunset.getHours() + sunTimes.sunset.getMinutes() / 60;
                     break;
@@ -77,12 +83,13 @@ class SunTimesChart extends React.Component {
                     sunSet = sunTimes.sunset.getUTCHours() - winterTimeDiff + sunTimes.sunset.getMinutes() / 60;
                     break;
             }
-
+            dawnSeries.push({ t: new Date(dt), y: dawn });
             sunRiseSeries.push({ t: new Date(dt), y: sunRise});
             wakeUpSeries.push({ t: new Date(dt), y: wakeUpTime });
             workStartSeries.push({ t: new Date(dt), y: workStart });
             workEndSeries.push({ t: new Date(dt), y: workEnd });
             sunSetSeries.push({ t: new Date(dt), y: sunSet });
+            duskSeries.push({ t: new Date(dt), y: dusk });
             bedTimeSeries.push({ t: new Date(dt), y: bedTime });
 
             dt.setDate(dt.getDate() + 1);
@@ -90,6 +97,10 @@ class SunTimesChart extends React.Component {
 
         return {
             datasets: [
+                {   label: "dawn",
+                    data: dawnSeries,
+                    borderColor: 'rgba(0, 241, 66, 1)'
+                },
                 {   label: "sunRise",
                     data: sunRiseSeries,
                     borderColor: 'rgba(244, 241, 66, 1)'
@@ -109,6 +120,11 @@ class SunTimesChart extends React.Component {
                 },
                 {   label: "sunSet",
                     data: sunSetSeries,
+                    fill: 'end',
+                    borderColor: 'rgba(244, 187, 65, 1)'
+                },
+                {   label: "dusk",
+                    data: duskSeries,
                     fill: 'end',
                     borderColor: 'rgba(244, 187, 65, 1)'
                 },

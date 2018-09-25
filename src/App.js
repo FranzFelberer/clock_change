@@ -22,14 +22,13 @@ class App extends Component {
     this.changeStateValue = this.changeStateValue.bind(this);
  }
  
-
   componentDidMount() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         this.setState({
           latitude: parseFloat(position.coords.latitude.toFixed(2)),
           longitude: parseFloat(position.coords.longitude.toFixed(2))
-        })
+        });
       }
     )
   }
