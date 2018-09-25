@@ -111,6 +111,9 @@ class SunTimesChart extends React.Component {
                     night = sunTimes.night.getUTCHours() - winterTimeDiff + sunTimes.night.getMinutes() / 60;
                     break;
             }
+            // quickfix for fill diagram
+            if (night < 12) {night = 23.99} 
+
             nightEndSeries.push({ t: new Date(dt), y: nightEnd });
             nauticalDawnSeries.push({ t: new Date(dt), y: nauticalDawn });
             dawnSeries.push({ t: new Date(dt), y: dawn });
@@ -200,8 +203,14 @@ class SunTimesChart extends React.Component {
                 {
                     label: "night",
                     data: nightSeries,
-                    fill: false,
+                    fill: "-1",
                     backgroundColor: "rgba(89, 106, 112, 0.8)"
+                },
+                {
+                label: "night2",
+                data: nightSeries,
+                fill: "end",
+                backgroundColor: "rgba(48, 69, 77, 0.8)"
                 }
             ]
         }
