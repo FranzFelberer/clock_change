@@ -29,6 +29,7 @@ class App extends Component {
           latitude: parseFloat(position.coords.latitude.toFixed(2)),
           longitude: parseFloat(position.coords.longitude.toFixed(2))
         });
+        console.log(position.coords.latitude);
       }
     )
   }
