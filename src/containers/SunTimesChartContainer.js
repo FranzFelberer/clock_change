@@ -3,6 +3,8 @@ import { Line } from 'react-chartjs-2';
 import SunCalc from 'suncalc';
 import { defaults } from 'react-chartjs-2';
 
+
+
 class SunTimesChart extends React.Component {
     constructor(props) {
         super(props);
@@ -44,15 +46,12 @@ class SunTimesChart extends React.Component {
                 + Number.parseInt(this.props.bedTime.split(':')[1]) / 60,
               timeModel = this.props.timeModel;
         
-        // calculate constant time shift between UTC and local time for no DST time models
-        let timeShiftGlobal = 0;
-        if (timeModel === 'alwaysSummerTime') {
-            const refSummerTime = new Date('2019-06-21');  // summer start =>  DST
-            timeShiftGlobal = refSummerTime.getTimezoneOffset() / 60;
-        } else if (timeModel === 'alwaysWinterTime') {
-            const refWinterTime = new Date('2019-12-21')  // winter start => no DST
-            timeShiftGlobal = refWinterTime.getTimezoneOffset() / 60;
-        }
+        // get the normal time difference between local time and UCT
+        const refWinterTime = new Date('2019-12-21')  // winter start => no DST
+        const winterTimeDiff = refWinterTime.getTimezoneOffset() / 60;
+
+        const refSummerTime = new Date('2019-06-21')  // summer start =>  DST
+        const summerTimeDiff = refSummerTime.getTimezoneOffset() / 60;
 
         let dt = new Date(startDate),
             nightEndSeries = [],
@@ -68,46 +67,65 @@ class SunTimesChart extends React.Component {
             nauticalDuskSeries = [],
             nightSeries = [];
 
-        while (dt <= endDate) {
-            let sunTimes = SunCalc.getTimes(dt, latidute, longitude);
-            let timeShiftSum = timeShiftGlobal;
-            
-            if (timeModel === 'clockChange') { 
-                timeShiftSum += dt.getTimezoneOffset() / 60;
-            }
 
+        while (dt <= endDate) {
+            let nightEnd,
+                nauticalDawn,
+                dawn,
+                sunRise,
+                sunSet,
+                dusk,
+                nauticalDusk,
+                night,
+                sunTimes = SunCalc.getTimes(dt, latidute, longitude);
+
+            switch (timeModel) {
+                case 'clockChange':
+                    nightEnd = sunTimes.nightEnd.getHours() + sunTimes.nightEnd.getMinutes() / 60;
+                    nauticalDawn = sunTimes.nauticalDawn.getHours() + sunTimes.nauticalDawn.getMinutes() / 60;
+                    dawn = sunTimes.dawn.getHours() + sunTimes.dawn.getMinutes() / 60;
+                    sunRise = sunTimes.sunrise.getHours() + sunTimes.sunrise.getMinutes() / 60;
+                    sunSet = sunTimes.sunset.getHours() + sunTimes.sunset.getMinutes() / 60;
+                    dusk = sunTimes.dusk.getHours() + sunTimes.dusk.getMinutes() / 60;
+                    nauticalDusk = sunTimes.nauticalDusk.getHours() + sunTimes.nauticalDusk.getMinutes() / 60;
+                    night = sunTimes.night.getHours() + sunTimes.night.getMinutes() / 60;
+                    break;
+                case 'alwaysSummerTime':
+                    nightEnd = sunTimes.nightEnd.getUTCHours() - summerTimeDiff + sunTimes.nightEnd.getMinutes() / 60;
+                    nauticalDawn = sunTimes.nauticalDawn.getUTCHours() - summerTimeDiff + sunTimes.nauticalDawn.getMinutes() / 60;
+                    dawn = sunTimes.dawn.getUTCHours() - summerTimeDiff + sunTimes.dawn.getMinutes() / 60;
+                    sunRise = sunTimes.sunrise.getUTCHours() - summerTimeDiff + sunTimes.sunrise.getMinutes() / 60;
+                    sunSet = sunTimes.sunset.getUTCHours() - summerTimeDiff + sunTimes.sunset.getMinutes() / 60;
+                    dusk = sunTimes.dusk.getUTCHours() - summerTimeDiff + sunTimes.dusk.getMinutes() / 60;
+                    nauticalDusk = sunTimes.nauticalDusk.getUTCHours() - summerTimeDiff + sunTimes.nauticalDusk.getMinutes() / 60;
+                    night = sunTimes.night.getUTCHours() - summerTimeDiff + sunTimes.night.getMinutes() / 60;
+                    break;
+                case 'alwaysWinterTime':
+                    nightEnd = sunTimes.nightEnd.getUTCHours() - winterTimeDiff + sunTimes.nightEnd.getMinutes() / 60;
+                    nauticalDawn = sunTimes.nauticalDawn.getUTCHours() - winterTimeDiff + sunTimes.nauticalDawn.getMinutes() / 60;
+                    dawn = sunTimes.dawn.getUTCHours() - winterTimeDiff + sunTimes.dawn.getMinutes() / 60;
+                    sunRise = sunTimes.sunrise.getUTCHours() - winterTimeDiff + sunTimes.sunrise.getMinutes() / 60;
+                    sunSet = sunTimes.sunset.getUTCHours() - winterTimeDiff + sunTimes.sunset.getMinutes() / 60;
+                    dusk = sunTimes.dusk.getUTCHours() - winterTimeDiff + sunTimes.dusk.getMinutes() / 60;
+                    nauticalDusk = sunTimes.nauticalDusk.getUTCHours() - winterTimeDiff + sunTimes.nauticalDusk.getMinutes() / 60;
+                    night = sunTimes.night.getUTCHours() - winterTimeDiff + sunTimes.night.getMinutes() / 60;
+                    break;
+            }
             // quickfix for fill diagram
-            let night = sunTimes.night.getUTCHours() - timeShiftSum
-                + sunTimes.night.getMinutes() / 60;
             if (night < 12) {night = 23.99} 
 
-            nightEndSeries.push({
-                t: new Date(dt), y: sunTimes.nightEnd.getUTCHours() - timeShiftSum
-                    + sunTimes.nightEnd.getMinutes() / 60 });
-            nauticalDawnSeries.push({
-                t: new Date(dt), y: sunTimes.nauticalDawn.getUTCHours() - timeShiftSum
-                    + sunTimes.nauticalDawn.getMinutes() / 60 });
-            dawnSeries.push({
-                t: new Date(dt), y: sunTimes.dawn.getUTCHours() - timeShiftSum
-                    + sunTimes.dawn.getMinutes() / 60 });
-            sunRiseSeries.push({
-                t: new Date(dt), y: sunTimes.sunrise.getUTCHours() - timeShiftSum
-                    + sunTimes.sunrise.getMinutes() / 60});
+            nightEndSeries.push({ t: new Date(dt), y: nightEnd });
+            nauticalDawnSeries.push({ t: new Date(dt), y: nauticalDawn });
+            dawnSeries.push({ t: new Date(dt), y: dawn });
+            sunRiseSeries.push({ t: new Date(dt), y: sunRise});
             wakeUpSeries.push({ t: new Date(dt), y: wakeUpTime });
             workStartSeries.push({ t: new Date(dt), y: workStart });
             workEndSeries.push({ t: new Date(dt), y: workEnd });
-            sunSetSeries.push({
-                t: new Date(dt), y: sunTimes.sunset.getUTCHours() - timeShiftSum
-                    + sunTimes.sunset.getMinutes() / 60 });
-            duskSeries.push({
-                t: new Date(dt), y: sunTimes.dusk.getUTCHours() - timeShiftSum
-                    + sunTimes.dusk.getMinutes() / 60 });
-            nauticalDuskSeries.push({
-                t: new Date(dt), y: sunTimes.nauticalDusk.getUTCHours() - timeShiftSum
-                    + sunTimes.nauticalDusk.getMinutes() / 60 });
+            sunSetSeries.push({ t: new Date(dt), y: sunSet });
+            duskSeries.push({ t: new Date(dt), y: dusk });
+            nauticalDuskSeries.push({ t: new Date(dt), y: nauticalDusk });
             bedTimeSeries.push({ t: new Date(dt), y: bedTime });
             nightSeries.push({ t: new Date(dt), y: night });
-            
             dt.setDate(dt.getDate() + 1);
         }
 
